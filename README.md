@@ -1,16 +1,24 @@
-# TaskFlow - Task Management Application
+# SmartBoard - Таск менеджер для учета задач
 
-TaskFlow is a modern task management application with a React frontend and Golang backend, using PostgreSQL for data storage.
+SmartBoard - это современное приложение для управления задачами с фронтендом на React и бэкендом на Golang, использующее PostgreSQL для хранения данных.
+
+### Запуск приложения
+
+1. Clone the repository
+2. Run the application:
+```bash
+docker-compose up -d --build
+```
+3. Access the application at http://localhost:3000
 
 ## Features
 
-- Kanban board with drag-and-drop functionality
-- Task creation and management
-- Task prioritization
-- Task comments
-- User assignment
-- Authentication and authorization (admin/user roles)
-- Multiple board views (Kanban, Gantt)
+- Канбан-доска с функцией перетаскивания (drag-and-drop)
+- Создание и управление задачами
+- Расстановка приоритетов задач
+- Комментарии к задачам
+- Назначение задач пользователям
+- Аутентификация и авторизация (роли администратора/пользователя)
 
 ## Tech Stack
 
@@ -31,48 +39,8 @@ TaskFlow is a modern task management application with a React frontend and Golan
 
 ## Docker Setup
 
-The entire application is containerized using Docker Compose, making it easy to run the complete stack with a single command.
+Всё приложение контейнеризировано с использованием Docker, запускается с помощью docker-compose, что позволяет легко запустить весь стек одной командой.
 
 ### Prerequisites
 - Docker and Docker Compose
 
-### Running the Application
-
-1. Clone the repository
-2. Run the application:
-```bash
-docker-compose up
-```
-3. Access the application at http://localhost:3000
-
-## Authentication
-
-- The first registered user will automatically become an admin
-- Admins can:
-  - Create and assign tasks
-  - Modify task details
-  - Add new columns
-- Regular users can:
-  - View tasks
-  - Move tasks between columns (update status)
-  - Add comments
-
-## Project Structure
-
-```
-├── src/                  # Frontend source code
-│   ├── api/              # API client
-│   ├── assets/           # Static assets
-│   ├── components/       # React components
-│   ├── context/          # React context (auth)
-│   ├── pages/            # Page components
-│   └── types/            # TypeScript type definitions
-├── backend/              # Backend source code
-│   ├── database/         # Database schema and migrations
-│   └── main.go           # Main application entry point
-└── docker-compose.yml    # Docker Compose configuration
-```
-
-## License
-
-MIT# smartBoard
