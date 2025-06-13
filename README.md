@@ -26,7 +26,7 @@ SmartBoard is a modern task management application featuring a React‑based Kan
 - React Router for client‑side routing  
 - JWT for authentication tokens  
 - ESLint & Prettier for linting & code style  
-
+           
 ### Backend
 
 - Go (Golang)  
@@ -45,10 +45,10 @@ All components are containerized. To launch the full stack locally:
 git clone https://github.com/belykh-ik/smartBoard.git
 cd smartBoard
 docker-compose up --build -d
+```
 
+- **Frontend:** http://localhost:3000
 
-- Frontend: http://localhost:3000
+- **Backend API:** http://localhost:8080 (or as configured)
 
-- Backend API: http://localhost:8080 (or as configured)
-
-- PostgreSQL: default port 5432
+- **PostgreSQL:** default port 5432
