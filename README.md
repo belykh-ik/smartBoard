@@ -1,46 +1,54 @@
-# SmartBoard - Таск менеджер для учета задач
+# SmartBoard
 
-SmartBoard - это современное приложение для управления задачами с фронтендом на React и бэкендом на Golang, использующее PostgreSQL для хранения данных.
+SmartBoard is a modern task management application featuring a React‑based Kanban board on the frontend and a Go‑powered REST API on the backend. It uses PostgreSQL for persistence and Docker Compose to orchestrate the full stack.
 
-### Запуск приложения
+---
 
-1. Clone the repository
-2. Run the application:
-```bash
-docker-compose up -d --build
-```
-3. Access the application at http://localhost:3000
+## 🚀 Features
 
-## Features
+- **Drag & Drop Kanban Board** — organize tasks by columns (To Do, In Progress, Done)  
+- **Task CRUD** — create, update, delete tasks with titles, descriptions, priorities  
+- **Comments & Assignments** — add comments and assign tasks to users  
+- **Authentication & Authorization** — JWT‑based login, role separation between admin and regular users  
+- **Persistent Storage** — PostgreSQL database for tasks and users  
+- **Responsive UI** — built with React, TypeScript, Tailwind CSS  
 
-- Канбан-доска с функцией перетаскивания (drag-and-drop)
-- Создание и управление задачами
-- Расстановка приоритетов задач
-- Комментарии к задачам
-- Назначение задач пользователям
-- Аутентификация и авторизация (роли администратора/пользователя)
+---
 
-## Tech Stack
+## 🛠 Technology Stack
 
 ### Frontend
-- React with TypeScript
-- Tailwind CSS for styling
-- React Beautiful DnD for drag-and-drop functionality
-- Axios for API requests
-- Lucide React for icons
-- React Router for routing
-- JWT for authentication
+
+- React & TypeScript  
+- Tailwind CSS  
+- React Beautiful DnD (drag‑and‑drop)  
+- Axios for HTTP requests  
+- React Router for client‑side routing  
+- JWT for authentication tokens  
+- ESLint & Prettier for linting & code style  
 
 ### Backend
-- Golang
-- Gorilla Mux for routing
-- PostgreSQL database
-- JWT for authentication
 
-## Docker Setup
+- Go (Golang)  
+- Gorilla Mux router  
+- PostgreSQL database  
+- JWT middleware for auth  
+- Dockerized microservices architecture  
 
-Всё приложение контейнеризировано с использованием Docker, запускается с помощью docker-compose, что позволяет легко запустить весь стек одной командой.
+---
 
-### Prerequisites
-- Docker and Docker Compose
+## 📦 Docker Setup
 
+All components are containerized. To launch the full stack locally:
+
+```bash
+git clone https://github.com/belykh-ik/smartBoard.git
+cd smartBoard
+docker-compose up --build -d
+
+
+- Frontend: http://localhost:3000
+
+- Backend API: http://localhost:8080 (or as configured)
+
+- PostgreSQL: default port 5432
