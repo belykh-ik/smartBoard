@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["go", "run", "."]
+CMD ["go", "run", "cmd/main.go"]
