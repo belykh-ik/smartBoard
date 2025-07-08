@@ -1,4 +1,4 @@
-module github.com/yourusername/taskflow
+module belykh-ik/taskflow
 
 go 1.21
 

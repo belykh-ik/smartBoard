@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"os"
 
+	"belykh-ik/taskflow/database"
+	"belykh-ik/taskflow/handlers"
+	"belykh-ik/taskflow/middleware"
+	"belykh-ik/taskflow/models"
+	"belykh-ik/taskflow/service"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/yourusername/taskflow/database"
-	"github.com/yourusername/taskflow/handlers"
-	"github.com/yourusername/taskflow/middleware"
-	"github.com/yourusername/taskflow/models"
 )
 
 func main() {
@@ -34,8 +36,14 @@ func main() {
 	// Initialize router
 	r := mux.NewRouter()
 
+	// Create Deps
+	board := service.NewBoardDeps(db)
+	task := service.NewTaskDeps(db)
+	user := service.NewUserDeps(db)
+	notification := service.NewNotificationDeps(db)
+
 	// Register Routes
-	handlers.RegisterRoures(r, db, config)
+	handlers.RegisterRoures(r, db, config, board, task, user, notification)
 	handlers.RegisterAuthRoures(r, db, config)
 
 	// Add Server Port

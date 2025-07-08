@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"belykh-ik/taskflow/middleware"
+	"belykh-ik/taskflow/models"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
-	"github.com/yourusername/taskflow/middleware"
-	"github.com/yourusername/taskflow/models"
 )
 
 type AuthDbDeps struct {

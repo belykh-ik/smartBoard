@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"belykh-ik/taskflow/models"
+
 	"github.com/golang-jwt/jwt"
-	"github.com/yourusername/taskflow/models"
 )
 
 func AuthMiddleware(config *models.Config, next http.HandlerFunc) http.HandlerFunc {
