@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DragDropContext, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import TaskColumn from './TaskColumn';
 import { Board as BoardType, Task } from '../types';
 import { Plus } from 'lucide-react';
@@ -143,7 +143,7 @@ const Board: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Загрузка...</div>;
+    return <div className="flex justify-center items-center h-screen dark:text-gray-100">Загрузка...</div>;
   }
 
   if (error || !board) {
@@ -155,10 +155,10 @@ const Board: React.FC = () => {
   }
 
   return (
-    <div className="pt-16 pl-20">
-      <div className="p-4 bg-white border-b">
+    <div className="pt-16 pl-20 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-semibold">Доска задач</h1>
+          <h1 className="text-xl font-semibold dark:text-gray-100">Доска задач</h1>
           {auth.isAdmin && (
             <div className="flex space-x-2">
               <button 

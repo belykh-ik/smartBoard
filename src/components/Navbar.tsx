@@ -13,18 +13,18 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-4 py-2.5 fixed w-full z-50">
+    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2.5 fixed w-full z-50">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
           <div className="h-8 w-8 mr-3 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold">
             SB
           </div>
-          <span className="text-xl font-semibold">SmartBoard</span>
+          <span className="text-xl font-semibold dark:text-gray-100">SmartBoard</span>
         </div>
         
         <div className="flex items-center space-x-4">
           <button 
-            className="relative p-1 rounded-full hover:bg-gray-100"
+            className="relative p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={() => navigate('/notifications')}
           >
             <Bell size={20} />
@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
             </span>
           </button>
           <button 
-            className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"
+            className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100"
             onClick={() => navigate('/profile')}
           >
             <User size={20} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from '@hello-pangea/dnd';
 import { MessageSquare, Flag } from 'lucide-react';
 import { Task } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -39,19 +39,19 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className="bg-gray-800 rounded-md p-3 mb-2 shadow-sm border-l-4 border-blue-500 cursor-pointer"
+          className="bg-white dark:bg-gray-800 rounded-md p-3 mb-2 shadow-sm border-l-4 border-blue-500 cursor-pointer"
           onClick={handleTaskClick}
         >
           <div className="flex justify-between items-start mb-2">
-            <div className="text-sm font-medium text-white">{task.title}</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">{task.title}</div>
           </div>
           
-          <p className="text-xs text-gray-300 mb-3">{task.description}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">{task.description}</p>
           
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <div className={`w-4 h-4 rounded-sm ${getPriorityColor(task.priority)}`}></div>
-              <div className="flex items-center text-gray-400 text-xs">
+              <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs">
                 <MessageSquare size={12} className="mr-1" />
                 <span>{task.comments?.length || 0}</span>
               </div>
@@ -59,7 +59,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
             
             <div className="flex items-center">
               {task.assignee && (
-                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white" title={task.assignee}>
+                <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-800 dark:text-white" title={task.assignee}>
                   {getInitials(task.assignee)}
                 </div>
               )}
