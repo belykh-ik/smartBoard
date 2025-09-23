@@ -108,6 +108,16 @@ export const fetchUsers = async (): Promise<User[]> => {
   }
 };
 
+export const createUser = async (payload: { username: string; email: string; password: string; role: 'admin' | 'user' }): Promise<User> => {
+  try {
+    const response = await api.post('/users', payload);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка создания пользователя:', error);
+    throw error;
+  }
+};
+
 // Notification API
 const mockNotifications: Notification[] = [
   {
@@ -168,6 +178,25 @@ export const deleteUser = async (userId: string): Promise<void> => {
     await api.delete(`/users/${userId}`);
   } catch (error) {
     console.error('Ошибка удаления пользователя:', error);
+    throw error;
+  }
+};
+
+export const updateProfile = async (updates: { username?: string; email?: string }): Promise<User> => {
+  try {
+    const response = await api.patch('/auth/me', updates);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка обновления профиля:', error);
+    throw error;
+  }
+};
+
+export const changePassword = async (payload: { currentPassword: string; newPassword: string }): Promise<void> => {
+  try {
+    await api.post('/auth/change-password', payload);
+  } catch (error) {
+    console.error('Ошибка смены пароля:', error);
     throw error;
   }
 };

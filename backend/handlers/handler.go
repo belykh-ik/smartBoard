@@ -44,6 +44,8 @@ func RegisterRoures(r *mux.Router, db *sql.DB, conf *models.Config, board *servi
 
 	// User routes
 	api.HandleFunc("/users", middleware.AuthMiddleware(conf, handler.getUsersHandler)).Methods("GET")
+	api.HandleFunc("/users", middleware.AuthMiddleware(conf, handler.createUserHandler)).Methods("POST")
+	api.HandleFunc("/users/{id}", middleware.AuthMiddleware(conf, handler.deleteUserHandler)).Methods("DELETE")
 
 	// Notification routes
 	api.HandleFunc("/notifications", middleware.AuthMiddleware(conf, handler.getNotificationsHandler)).Methods("GET")
@@ -188,6 +190,60 @@ func (h *handlerDeps) getUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
+}
+
+type createUserRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
+func (h *handlerDeps) createUserHandler(w http.ResponseWriter, r *http.Request) {
+	role := r.Context().Value("role").(string)
+	if role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
+	var req createUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Username == "" || req.Email == "" || req.Password == "" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	if req.Role == "" {
+		req.Role = "user"
+	}
+
+	user, err := h.user.CreateUser(req.Username, req.Email, req.Password, req.Role)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
+}
+
+func (h *handlerDeps) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	role := r.Context().Value("role").(string)
+	if role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+	vars := mux.Vars(r)
+	userID := vars["id"]
+	if userID == "" {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
+	if err := h.user.DeleteUser(userID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted"})
 }
 
 // Notification handlers

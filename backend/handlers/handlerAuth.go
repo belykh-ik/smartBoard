@@ -30,6 +30,8 @@ func RegisterAuthRoures(r *mux.Router, db *sql.DB, conf *models.Config) {
 	api.HandleFunc("/auth/register", handler.registerHandler).Methods("POST")
 	api.HandleFunc("/auth/login", handler.loginHandler).Methods("POST")
 	api.HandleFunc("/auth/me", middleware.AuthMiddleware(conf, handler.getCurrentUserHandler)).Methods("GET")
+	api.HandleFunc("/auth/me", middleware.AuthMiddleware(conf, handler.updateCurrentUserHandler)).Methods("PATCH")
+	api.HandleFunc("/auth/change-password", middleware.AuthMiddleware(conf, handler.changePasswordHandler)).Methods("POST")
 
 }
 
@@ -155,4 +157,62 @@ func (h *AuthDbDeps) getCurrentUserHandler(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+func (h *AuthDbDeps) updateCurrentUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userId").(string)
+	var updates map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	if username, ok := updates["username"]; ok {
+		if _, err := h.db.Exec("UPDATE users SET username = $1 WHERE id = $2", username, userID); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+	}
+	if email, ok := updates["email"]; ok {
+		if _, err := h.db.Exec("UPDATE users SET email = $1 WHERE id = $2", email, userID); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+	}
+	var user models.User
+	if err := h.db.QueryRow("SELECT id, username, email, role, created_at FROM users WHERE id = $1", userID).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Role, &user.CreatedAt); err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+type changePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
+func (h *AuthDbDeps) changePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userId").(string)
+	var req changePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.CurrentPassword == "" || req.NewPassword == "" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	var current string
+	if err := h.db.QueryRow("SELECT password FROM users WHERE id = $1", userID).Scan(&current); err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	if current != req.CurrentPassword {
+		http.Error(w, "Текущий пароль неверен", http.StatusUnauthorized)
+		return
+	}
+	if _, err := h.db.Exec("UPDATE users SET password = $1 WHERE id = $2", req.NewPassword, userID); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Пароль изменен"})
 }

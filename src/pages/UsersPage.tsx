@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
-import { fetchUsers, fetchBoardData } from '../api';
+import { fetchUsers, fetchBoardData, createUser, deleteUser as apiDeleteUser } from '../api';
 import { User, Board } from '../types';
+import { useNavigate } from 'react-router-dom';
+import AddUserModal from '../components/AddUserModal';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -16,6 +18,9 @@ const UsersPage: React.FC = () => {
   const { auth } = useAuth();
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [newRole, setNewRole] = useState<'admin' | 'user'>('user');
+  const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadData = async () => {
@@ -48,10 +53,12 @@ const UsersPage: React.FC = () => {
     }
   };
 
-  const getUserTaskStats = (userId: string) => {
+  const getUserTaskStats = (userId: string, username?: string) => {
     if (!board) return { total: 0, inProgress: 0, pending: 0, completed: 0 };
     
-    const userTasks = Object.values(board.tasks).filter(task => task.assignee === userId);
+    const userTasks = Object.values(board.tasks).filter(task => 
+      task.assignee === userId || task.assignee === username
+    );
     
     return {
       total: userTasks.length,
@@ -79,12 +86,18 @@ const UsersPage: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
+    if (!auth.isAdmin) return;
     if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      // Here you would make an API call to delete the user
-      console.log(`Deleting user ${userId}`);
-      
-      // For now, we'll just update the local state
-      setUsers(users.filter(user => user.id !== userId));
+      try {
+        await apiDeleteUser(userId);
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        // Refresh board to update stats after reassignment to backlog
+        const boardData = await fetchBoardData();
+        setBoard(boardData);
+      } catch (err) {
+        console.error('Ошибка удаления пользователя:', err);
+        alert('Не удалось удалить пользователя');
+      }
     }
   };
 
@@ -109,7 +122,10 @@ const UsersPage: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Пользователи</h1>
             {auth.isAdmin && (
-              <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+              <button 
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={() => setIsAddOpen(true)}
+              >
                 <UserPlus size={18} className="mr-2" />
                 Добавить пользователя
               </button>
@@ -146,7 +162,7 @@ const UsersPage: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map(user => {
-                    const stats = getUserTaskStats(user.id);
+                    const stats = getUserTaskStats(user.id, user.username);
                     return (
                       <tr key={user.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -240,6 +256,14 @@ const UsersPage: React.FC = () => {
               </table>
             </div>
           )}
+          <AddUserModal 
+            isOpen={isAddOpen} 
+            onClose={() => setIsAddOpen(false)} 
+            onSubmit={async ({ username, email, password, role }) => {
+              const created = await createUser({ username, email, password, role });
+              setUsers(prev => [created, ...prev]);
+            }}
+          />
         </div>
       </div>
     </div>
