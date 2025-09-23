@@ -5,7 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { User, Mail, Calendar, Shield, Clock } from 'lucide-react';
-import { fetchBoardData } from '../api';
+import { fetchBoardData, updateProfile, changePassword } from '../api';
+import ChangePasswordModal from '../components/ChangePasswordModal';
+import EditProfileModal from '../components/EditProfileModal';
 
 const ProfilePage: React.FC = () => {
   const { auth } = useAuth();
@@ -16,6 +18,8 @@ const ProfilePage: React.FC = () => {
     total: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isPwdOpen, setIsPwdOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   
   useEffect(() => {
     const loadTaskStats = async () => {
@@ -26,14 +30,13 @@ const ProfilePage: React.FC = () => {
           
           // Filter tasks for the current user
           const userTasks = Object.values(boardData.tasks).filter(task => 
-            task.assignee === auth.user?.username || 
-            task.assignee === auth.user?.id
+            task.assignee === auth.user?.id || task.assignee === auth.user?.username
           );
           
           setTaskStats({
             inProgress: userTasks.filter(task => task.state === 'inprogress').length,
             completed: userTasks.filter(task => task.state === 'done').length,
-            pending: userTasks.filter(task => task.state === 'aprove').length,
+            pending: userTasks.filter(task => task.state === 'aprove' || task.state === 'pending' || task.state === 'review').length,
             total: userTasks.length
           });
         } catch (error) {
@@ -170,10 +173,10 @@ const ProfilePage: React.FC = () => {
               <div className="mt-8 pt-6 border-t">
                 <h3 className="text-lg font-semibold mb-4">Настройки профиля</h3>
                 <div className="flex space-x-4">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={() => setIsEditOpen(true)}>
                     Изменить профиль
                   </button>
-                  <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+                  <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300" onClick={() => setIsPwdOpen(true)}>
                     Сменить пароль
                   </button>
                 </div>
@@ -181,6 +184,25 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
+        <ChangePasswordModal 
+          isOpen={isPwdOpen} 
+          onClose={() => setIsPwdOpen(false)} 
+          onSubmit={async ({ currentPassword, newPassword }) => { await changePassword({ currentPassword, newPassword }); }}
+        />
+        <EditProfileModal 
+          isOpen={isEditOpen} 
+          onClose={() => setIsEditOpen(false)} 
+          initial={{ username: auth.user.username, email: auth.user.email }} 
+          onSubmit={async ({ username, email }) => {
+            const updated = await updateProfile({ username, email });
+            // локально обновим AuthContext
+            // simple local update without token change
+            // @ts-ignore
+            auth.user.username = updated.username; 
+            // @ts-ignore
+            auth.user.email = updated.email; 
+          }}
+        />
       </div>
     </div>
   );
