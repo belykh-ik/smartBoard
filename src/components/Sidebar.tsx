@@ -12,12 +12,12 @@ const SidebarItem: React.FC<{ icon: React.ReactNode; text: string; active?: bool
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center py-3 cursor-pointer hover:bg-gray-200 w-full ${active ? 'bg-gray-200' : ''}`}
+      className={`flex flex-col items-center py-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 w-full ${active ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
     >
-      <div className="text-gray-600">
+      <div className="text-gray-600 dark:text-gray-300">
         {icon}
       </div>
-      <span className="text-xs mt-1 text-gray-600">{text}</span>
+      <span className="text-xs mt-1 text-gray-600 dark:text-gray-300">{text}</span>
     </button>
   );
 };
@@ -29,7 +29,7 @@ const Sidebar: React.FC = () => {
   const path = location.pathname;
 
   return (
-    <div className="bg-gray-100 w-20 fixed h-full left-0 top-0 flex flex-col items-center pt-16">
+    <div className="bg-gray-100 dark:bg-gray-900 w-20 fixed h-full left-0 top-0 flex flex-col items-center pt-16">
       <SidebarItem 
         icon={<LayoutDashboard size={20} />} 
         text="Дашборд" 

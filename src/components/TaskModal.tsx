@@ -67,12 +67,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Создать задачу</h2>
+          <h2 className="text-xl font-semibold dark:text-gray-100">Создать задачу</h2>
           <button 
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200"
           >
             <X size={20} />
           </button>
@@ -86,11 +86,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="title">
               Заголовок
             </label>
             <input
-              className={`shadow appearance-none border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+              className={`shadow appearance-none border ${errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded w-full py-2 px-3 text-gray-700 dark:text-gray-100 dark:bg-gray-900 leading-tight focus:outline-none focus:shadow-outline`}
               id="title"
               type="text"
               placeholder="Заголовок задачи"
@@ -102,11 +102,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="description">
               Описание
             </label>
             <textarea
-              className={`shadow appearance-none border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+              className={`shadow appearance-none border ${errors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded w-full py-2 px-3 text-gray-700 dark:text-gray-100 dark:bg-gray-900 leading-tight focus:outline-none focus:shadow-outline`}
               id="description"
               placeholder="Описание задачи"
               rows={3}
@@ -118,11 +118,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="state">
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="state">
               Статус
             </label>
             <select
-              className={`shadow appearance-none border ${errors.state ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+              className={`shadow appearance-none border ${errors.state ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded w-full py-2 px-3 text-gray-700 dark:text-gray-100 dark:bg-gray-900 leading-tight focus:outline-none focus:shadow-outline`}
               id="state"
               {...register('state', { required: 'Статус обязателен' })}
             >
@@ -138,11 +138,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="priority">
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="priority">
               Приоритет
             </label>
             <select
-              className={`shadow appearance-none border ${errors.priority ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+              className={`shadow appearance-none border ${errors.priority ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded w-full py-2 px-3 text-gray-700 dark:text-gray-100 dark:bg-gray-900 leading-tight focus:outline-none focus:shadow-outline`}
               id="priority"
               {...register('priority', { required: 'Приоритет обязателен' })}
             >
@@ -156,11 +156,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="assignee">
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="assignee">
               Исполнитель
             </label>
             <select
-              className={`shadow appearance-none border ${errors.assignee ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+              className={`shadow appearance-none border ${errors.assignee ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded w-full py-2 px-3 text-gray-700 dark:text-gray-100 dark:bg-gray-900 leading-tight focus:outline-none focus:shadow-outline`}
               id="assignee"
               {...register('assignee', { required: 'Исполнитель обязателен' })}
             >
@@ -179,7 +179,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
           <div className="flex items-center justify-end">
             <button
               type="button"
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 font-bold py-2 px-4 rounded mr-2"
               onClick={onClose}
             >
               Отмена

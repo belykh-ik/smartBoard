@@ -12,6 +12,7 @@ const SettingsPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<Record<string, boolean>>({});
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -38,6 +39,18 @@ const SettingsPage: React.FC = () => {
     loadUsers();
   }, [auth.isAdmin, auth.user?.id]);
 
+  // Initialize dark mode from storage/system
+  useEffect(() => {
+    try {
+      const storedTheme = localStorage.getItem('theme');
+      const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = storedTheme ? storedTheme === 'dark' : systemPrefersDark;
+      setDarkMode(isDark);
+    } catch (_) {
+      // ignore
+    }
+  }, []);
+
   const handleRoleChange = (userId: string, isAdmin: boolean) => {
     setSelectedUsers({
       ...selectedUsers,
@@ -59,57 +72,69 @@ const SettingsPage: React.FC = () => {
     navigate('/dashboard');
   };
 
+  const handleToggleDark = (enabled: boolean) => {
+    setDarkMode(enabled);
+    const root = document.documentElement;
+    if (enabled) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <Sidebar />
       <div className="pt-16 pl-20 p-6">
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-6">Настройки</h1>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+          <h1 className="text-2xl font-semibold mb-6 dark:text-gray-100">Настройки</h1>
           
           <div className="mb-6">
-            <h2 className="text-lg font-medium mb-4">Профиль пользователя</h2>
+            <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Профиль пользователя</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Имя пользователя
                 </label>
                 <input 
                   type="text" 
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 rounded-md"
                   value={auth.user?.username || ''}
                   readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email
                 </label>
                 <input 
                   type="email" 
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 rounded-md"
                   value={auth.user?.email || ''}
                   readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Роль
                 </label>
                 <input 
                   type="text" 
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 rounded-md"
                   value={auth.user?.role === 'admin' ? 'Администратор' : 'Пользователь'}
                   readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Дата регистрации
                 </label>
                 <input 
                   type="text" 
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 rounded-md"
                   value={auth.user?.createdAt ? new Date(auth.user.createdAt).toLocaleDateString('ru-RU') : ''}
                   readOnly
                 />
@@ -118,15 +143,17 @@ const SettingsPage: React.FC = () => {
           </div>
           
           <div className="mb-6">
-            <h2 className="text-lg font-medium mb-4">Настройки интерфейса</h2>
+            <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Настройки интерфейса</h2>
             <div className="space-y-4">
               <div className="flex items-center">
                 <input 
                   id="darkMode" 
                   type="checkbox" 
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                  checked={darkMode}
+                  onChange={(e) => handleToggleDark(e.target.checked)}
                 />
-                <label htmlFor="darkMode" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="darkMode" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Темная тема
                 </label>
               </div>
@@ -134,10 +161,10 @@ const SettingsPage: React.FC = () => {
                 <input 
                   id="notifications" 
                   type="checkbox" 
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                   defaultChecked
                 />
-                <label htmlFor="notifications" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="notifications" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Включить уведомления
                 </label>
               </div>
@@ -145,9 +172,9 @@ const SettingsPage: React.FC = () => {
                 <input 
                   id="compactView" 
                   type="checkbox" 
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                 />
-                <label htmlFor="compactView" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="compactView" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Компактный вид задач
                 </label>
               </div>
@@ -156,7 +183,7 @@ const SettingsPage: React.FC = () => {
           
           {auth.isAdmin && (
             <div>
-              <h2 className="text-lg font-medium mb-4">Настройки администратора</h2>
+              <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Настройки администратора</h2>
               <div className="space-y-4 mb-6">
                 <button 
                   className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
@@ -169,8 +196,8 @@ const SettingsPage: React.FC = () => {
                 </button>
               </div>
               
-              <div className="mt-6 border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-medium mb-4">Назначение администраторов</h3>
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-medium mb-4 dark:text-gray-100">Назначение администраторов</h3>
                 {loading ? (
                   <div className="flex justify-center py-4">
                     <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
@@ -178,18 +205,18 @@ const SettingsPage: React.FC = () => {
                 ) : (
                   <div className="space-y-3 max-h-60 overflow-y-auto">
                     {users.map(user => (
-                      <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                      <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-200 font-bold mr-3">
                             {user.username.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium">{user.username}</p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+                            <p className="font-medium dark:text-gray-100">{user.username}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-300">{user.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center">
-                          <span className="mr-2 text-sm">Администратор</span>
+                          <span className="mr-2 text-sm dark:text-gray-200">Администратор</span>
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input 
                               type="checkbox" 
@@ -197,7 +224,7 @@ const SettingsPage: React.FC = () => {
                               checked={selectedUsers[user.id] || false}
                               onChange={(e) => handleRoleChange(user.id, e.target.checked)}
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
                       </div>
@@ -208,7 +235,7 @@ const SettingsPage: React.FC = () => {
             </div>
           )}
           
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button 
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
               onClick={handleSaveChanges}
