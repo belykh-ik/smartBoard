@@ -2,10 +2,12 @@ import React from 'react';
 import { Bell, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../context/NotificationsContext';
 
 const Navbar: React.FC = () => {
   const { auth, logout } = useAuth();
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
 
   const handleLogout = () => {
     logout();
@@ -28,9 +30,11 @@ const Navbar: React.FC = () => {
             onClick={() => navigate('/notifications')}
           >
             <Bell size={20} />
-            <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-              2
-            </span>
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 h-4 min-w-4 px-1 bg-red-500 rounded-full text-[10px] leading-4 text-white flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </button>
           <button 
             className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100"

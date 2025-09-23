@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { Task } from '../types';
-import { fetchBoardData, updateTask, deleteTask } from '../api';
+import { fetchBoardData, updateTask, deleteTask, addComment } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { AlertTriangle, MessageSquare, Trash2, Edit, ArrowLeft } from 'lucide-react';
 
@@ -17,6 +17,8 @@ const TaskDetailPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
   const [columns, setColumns] = useState<{ id: string; title: string }[]>([]);
+  const [newComment, setNewComment] = useState<string>('');
+  const [commentSubmitting, setCommentSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     const loadTask = async () => {
@@ -322,8 +324,29 @@ const TaskDetailPage: React.FC = () => {
                         placeholder="Добавить комментарий..."
                         className="w-full p-2 border border-gray-300 rounded-md"
                         rows={3}
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
                       />
-                      <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                      <button 
+                        className={`mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${commentSubmitting || !newComment.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={commentSubmitting || !newComment.trim()}
+                        onClick={async () => {
+                          if (!task || !id || !newComment.trim()) return;
+                          try {
+                            setCommentSubmitting(true);
+                            const created = await addComment(id, newComment.trim());
+                            setTask({
+                              ...task,
+                              comments: [created, ...(task.comments || [])],
+                            });
+                            setNewComment('');
+                          } catch (err) {
+                            console.error('Ошибка добавления комментария:', err);
+                          } finally {
+                            setCommentSubmitting(false);
+                          }
+                        }}
+                      >
                         Отправить
                       </button>
                     </div>

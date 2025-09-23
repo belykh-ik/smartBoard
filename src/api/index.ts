@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Board, Task, User, Notification } from '../types';
+import { Board, Task, User, Notification, Comment } from '../types';
 
 // API URL from environment variable or default
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -87,6 +87,16 @@ export const deleteTask = async (taskId: string): Promise<void> => {
   }
 };
 
+export const addComment = async (taskId: string, content: string): Promise<Comment> => {
+  try {
+    const response = await api.post(`/tasks/${taskId}/comments`, { content });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка добавления комментария:', error);
+    throw error;
+  }
+};
+
 // User API
 export const fetchUsers = async (): Promise<User[]> => {
   try {
@@ -99,13 +109,37 @@ export const fetchUsers = async (): Promise<User[]> => {
 };
 
 // Notification API
+const mockNotifications: Notification[] = [
+  {
+    id: 'n1',
+    userId: 'mock',
+    message: 'Вам назначена новая задача: Обновить дизайн',
+    read: false,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'n2',
+    userId: 'mock',
+    message: 'Статус вашей задачи изменен на: В работе',
+    read: false,
+    createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'n3',
+    userId: 'mock',
+    message: 'Администратор оставил комментарий к задаче',
+    read: true,
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 export const fetchNotifications = async (): Promise<Notification[]> => {
   try {
     const response = await api.get('/notifications');
     return response.data;
   } catch (error) {
-    console.error('Ошибка загрузки уведомлений:', error);
-    throw error;
+    console.warn('Ошибка загрузки уведомлений, использую mock:', error);
+    return mockNotifications;
   }
 };
 
@@ -113,8 +147,8 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
   try {
     await api.patch(`/notifications/${notificationId}/read`);
   } catch (error) {
-    console.error('Ошибка обновления статуса уведомления:', error);
-    throw error;
+    console.warn('Ошибка обновления статуса уведомления (mock no-op):', error);
+    // no throw to avoid breaking UI when backend is unavailable
   }
 };
 
