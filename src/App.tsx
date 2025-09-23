@@ -9,6 +9,8 @@ import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import UsersPage from './pages/UsersPage';
 import TaskDetailPage from './pages/TaskDetailPage';
+import ScaleContainer from './components/ScaleContainer';
+import { NotificationsProvider } from './context/NotificationsContext';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -74,9 +76,13 @@ const AppRoutes: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <NotificationsProvider>
+        <Router>
+          <ScaleContainer>
+            <AppRoutes />
+          </ScaleContainer>
+        </Router>
+      </NotificationsProvider>
     </AuthProvider>
   );
 }

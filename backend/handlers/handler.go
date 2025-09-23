@@ -23,10 +23,11 @@ type handlerDeps struct {
 
 func RegisterRoures(r *mux.Router, db *sql.DB, conf *models.Config, board *service.BoardDeps, task *service.TaskDeps, user *service.UserDeps, notification *service.NotificationsDeps) {
 	handler := &handlerDeps{
-		board: board,
-		task:  task,
-		user:  user,
-		db:    db,
+		board:        board,
+		task:         task,
+		user:         user,
+		notification: notification,
+		db:           db,
 	}
 	// API routes
 	api := r.PathPrefix("/api").Subrouter()
@@ -39,6 +40,7 @@ func RegisterRoures(r *mux.Router, db *sql.DB, conf *models.Config, board *servi
 	api.HandleFunc("/tasks/{id}", middleware.AuthMiddleware(conf, handler.getTaskHandler)).Methods("GET")
 	api.HandleFunc("/tasks/{id}", middleware.AuthMiddleware(conf, handler.updateTaskHandler)).Methods("PATCH")
 	api.HandleFunc("/tasks/{id}", middleware.AuthMiddleware(conf, handler.deleteTaskHandler)).Methods("DELETE")
+	api.HandleFunc("/tasks/{id}/comments", middleware.AuthMiddleware(conf, handler.addCommentHandler)).Methods("POST")
 
 	// User routes
 	api.HandleFunc("/users", middleware.AuthMiddleware(conf, handler.getUsersHandler)).Methods("GET")
@@ -150,6 +152,32 @@ func (h *handlerDeps) deleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": fmt.Sprintf("Task %s deleted successfully", taskID),
 	})
+}
+
+type addCommentRequest struct {
+	Content string `json:"content"`
+}
+
+func (h *handlerDeps) addCommentHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskID := vars["id"]
+	userID := r.Context().Value("userId").(string)
+
+	var req addCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Content == "" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	comment, err := h.task.AddComment(userID, taskID, req.Content)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(comment)
 }
 
 func (h *handlerDeps) getUsersHandler(w http.ResponseWriter, r *http.Request) {

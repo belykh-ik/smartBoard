@@ -3,44 +3,18 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { fetchNotifications, markNotificationAsRead } from '../api';
 import { Notification } from '../types';
+import { useNotifications } from '../context/NotificationsContext';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Bell, Check, Trash2 } from 'lucide-react';
 
 const NotificationsPage: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { notifications, loading, error, markAsRead, markAllAsRead, refresh } = useNotifications();
 
-  useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchNotifications();
-        setNotifications(data);
-        setError(null);
-      } catch (err) {
-        setError('Не удалось загрузить уведомления');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadNotifications();
-  }, []);
+  // Data is loaded by provider; page doesn't need to trigger refresh here
 
   const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await markNotificationAsRead(notificationId);
-      setNotifications(notifications.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true } 
-          : notification
-      ));
-    } catch (err) {
-      console.error('Ошибка при обновлении уведомления:', err);
-    }
+    await markAsRead(notificationId);
   };
 
   const formatDate = (dateString: string) => {
@@ -51,42 +25,19 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
-  // Если нет уведомлений, добавим несколько примеров
-  const demoNotifications: Notification[] = [
-    {
-      id: '1',
-      userId: '1',
-      message: 'Вам назначена новая задача: Обновить дизайн главной страницы',
-      read: false,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      userId: '1',
-      message: 'Статус вашей задачи изменен на: В работе',
-      read: false,
-      createdAt: new Date(Date.now() - 3600000).toISOString()
-    },
-    {
-      id: '3',
-      userId: '1',
-      message: 'Администратор добавил комментарий к вашей задаче',
-      read: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString()
-    }
-  ];
-
-  const displayNotifications = notifications.length > 0 ? notifications : demoNotifications;
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <Sidebar />
       <div className="pt-16 pl-20 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Уведомления</h1>
-            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+            <h1 className="text-2xl font-bold dark:text-gray-100">Уведомления</h1>
+            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50" onClick={handleMarkAllAsRead} disabled={notifications.every(n => n.read)}>
               Отметить все как прочитанные
             </button>
           </div>
@@ -100,28 +51,28 @@ const NotificationsPage: React.FC = () => {
               {error}
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              {displayNotifications.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              {notifications.length === 0 ? (
                 <div className="p-8 text-center">
-                  <Bell size={48} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500">У вас нет уведомлений</p>
+                  <Bell size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                  <p className="text-gray-500 dark:text-gray-300">У вас нет уведомлений</p>
                 </div>
               ) : (
-                <ul className="divide-y divide-gray-200">
-                  {displayNotifications.map(notification => (
+                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {notifications.map(notification => (
                     <li 
                       key={notification.id} 
-                      className={`p-4 hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
+                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/30' : 'dark:bg-transparent'}`}
                     >
                       <div className="flex items-start">
-                        <div className={`flex-shrink-0 mt-1 ${!notification.read ? 'text-blue-500' : 'text-gray-400'}`}>
+                        <div className={`flex-shrink-0 mt-1 ${!notification.read ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'}`}>
                           <Bell size={20} />
                         </div>
                         <div className="ml-3 flex-1">
-                          <p className={`text-sm ${!notification.read ? 'font-medium' : 'text-gray-600'}`}>
+                          <p className={`text-sm ${!notification.read ? 'font-medium dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'}`}>
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {formatDate(notification.createdAt)}
                           </p>
                         </div>

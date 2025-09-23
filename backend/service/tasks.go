@@ -32,21 +32,19 @@ func (t TaskDeps) CreateTask(userID string, task *models.Task) error {
 		return err
 	}
 
-	// Get assignee username
+	// Get assignee username for response, but keep ID for notifications
 	if task.Assignee != "" {
+		assigneeID := task.Assignee
 		var username string
-		err = t.db.QueryRow("SELECT username FROM users WHERE id = $1", task.Assignee).Scan(&username)
-		if err == nil {
+		if err = t.db.QueryRow("SELECT username FROM users WHERE id = $1", assigneeID).Scan(&username); err == nil {
 			task.Assignee = username
 		}
 
-		// Create notification for the assignee
-		_, err = t.db.Exec(`
-			INSERT INTO notifications (user_id, message, read, created_at)
-			VALUES ($1, $2, false, $3)
-		`, task.Assignee, fmt.Sprintf("Вам назначена новая задача: %s", task.Title), now)
-
-		if err != nil {
+		// Create notification for the assignee (use ID)
+		if _, err = t.db.Exec(`
+            INSERT INTO notifications (user_id, message, read, created_at)
+            VALUES ($1, $2, false, $3)
+        `, assigneeID, fmt.Sprintf("Вам назначена новая задача: %s", task.Title), now); err != nil {
 			log.Printf("Error creating notification: %v", err)
 		}
 	}
@@ -142,6 +140,17 @@ func (t TaskDeps) UpdateTask(taskID string, updates map[string]interface{}) (*mo
 		query += fmt.Sprintf(", priority = $%d", paramCount)
 		params = append(params, int(priority))
 		paramCount++
+		// Priority change notification to assignee
+		if assigneeID.Valid {
+			var taskTitle string
+			_ = t.db.QueryRow("SELECT title FROM tasks WHERE id = $1", taskID).Scan(&taskTitle)
+			if _, err = t.db.Exec(`
+                INSERT INTO notifications (user_id, message, read, created_at)
+                VALUES ($1, $2, false, $3)
+            `, assigneeID.String, fmt.Sprintf("Приоритет задачи '%s' изменен на %d", taskTitle, int(priority)), time.Now()); err != nil {
+				log.Printf("Error creating notification: %v", err)
+			}
+		}
 	}
 
 	if assignee, ok := updates["assignee"].(string); ok {
@@ -188,10 +197,59 @@ func (t TaskDeps) UpdateTask(taskID string, updates map[string]interface{}) (*mo
 }
 
 func (t TaskDeps) DeleteTask(taskID string) error {
+	// Notify assignee before delete
+	var assigneeID sql.NullString
+	var title string
+	_ = t.db.QueryRow("SELECT assignee, title FROM tasks WHERE id = $1", taskID).Scan(&assigneeID, &title)
+
 	// Delete task from database
 	_, err := t.db.Exec("DELETE FROM tasks WHERE id = $1", taskID)
 	if err != nil {
 		return err
 	}
+	if assigneeID.Valid {
+		if _, nerr := t.db.Exec(`
+            INSERT INTO notifications (user_id, message, read, created_at)
+            VALUES ($1, $2, false, $3)
+        `, assigneeID.String, fmt.Sprintf("Задача '%s' была удалена", title), time.Now()); nerr != nil {
+			log.Printf("Error creating notification: %v", nerr)
+		}
+	}
 	return nil
+}
+
+func (t TaskDeps) AddComment(userID string, taskID string, content string) (*models.Comment, error) {
+	// Insert comment
+	var comment models.Comment
+	now := time.Now()
+	err := t.db.QueryRow(`
+        INSERT INTO comments (task_id, content, author, created_at)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, content, created_at
+    `, taskID, content, userID, now).Scan(&comment.ID, &comment.Content, &comment.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load author username
+	var authorUsername string
+	if err = t.db.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&authorUsername); err == nil {
+		comment.Author = authorUsername
+	}
+
+	// Notify assignee of the task
+	var assigneeID sql.NullString
+	var title string
+	if err = t.db.QueryRow("SELECT assignee, title FROM tasks WHERE id = $1", taskID).Scan(&assigneeID, &title); err == nil {
+		if assigneeID.Valid {
+			if _, nerr := t.db.Exec(`
+                INSERT INTO notifications (user_id, message, read, created_at)
+                VALUES ($1, $2, false, $3)
+            `, assigneeID.String, fmt.Sprintf("К задаче '%s' добавлен комментарий", title), time.Now()); nerr != nil {
+				log.Printf("Error creating notification: %v", nerr)
+			}
+		}
+	}
+
+	return &comment, nil
 }
