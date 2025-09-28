@@ -200,3 +200,14 @@ export const changePassword = async (payload: { currentPassword: string; newPass
     throw error;
   }
 };
+
+// Board Settings API
+export const updateBoardColumns = async (columns: Array<{ id: string; title: string; order: number }>) => {
+  try {
+    const response = await api.put('/board/columns', { columns });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка обновления колонок:', error);
+    throw error;
+  }
+};

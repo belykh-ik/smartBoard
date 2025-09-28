@@ -18,7 +18,7 @@ const Navbar: React.FC = () => {
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2.5 fixed w-full z-50">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
-          <div className="h-8 w-8 mr-3 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold">
+          <div className="h-8 w-8 mr-3 bg-accent rounded-md flex items-center justify-center text-white font-bold">
             SB
           </div>
           <span className="text-xl font-semibold dark:text-gray-100">SmartBoard</span>
@@ -31,7 +31,7 @@ const Navbar: React.FC = () => {
           >
             <Bell size={20} />
             {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 h-4 min-w-4 px-1 bg-red-500 rounded-full text-[10px] leading-4 text-white flex items-center justify-center">
+              <span className="absolute top-0 right-0 h-4 min-w-4 px-1 bg-accent rounded-full text-[10px] leading-4 text-white flex items-center justify-center">
                 {unreadCount}
               </span>
             )}
