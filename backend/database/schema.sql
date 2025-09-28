@@ -30,11 +30,19 @@ CREATE TABLE IF NOT EXISTS comments (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create columns table
-CREATE TABLE IF NOT EXISTS columns (
+-- Create board_columns table
+CREATE TABLE IF NOT EXISTS board_columns (
     id VARCHAR(50) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    position INTEGER NOT NULL
+    column_order INTEGER NOT NULL
+);
+
+-- Create board_config table
+CREATE TABLE IF NOT EXISTS board_config (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    column_order JSONB NOT NULL DEFAULT '[]',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create notifications table
@@ -46,12 +54,16 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insert default columns
-INSERT INTO columns (id, title, position) VALUES
+-- Insert default board columns
+INSERT INTO board_columns (id, title, column_order) VALUES
     ('backlog', 'Бэклог', 1),
     ('inprogress', 'В работе', 2),
     ('aprove', 'На подтверждении', 3),
     ('done', 'Завершено', 4);
+
+-- Insert default board config
+INSERT INTO board_config (column_order) VALUES ('["backlog", "inprogress", "aprove", "done"]')
+ON CONFLICT (id) DO NOTHING;
 
 -- Create default admin user (username: admin, password: admin)
 INSERT INTO users (username, email, password, role) 

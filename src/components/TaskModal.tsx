@@ -19,7 +19,7 @@ interface TaskFormData {
   description: string;
   state: string;
   priority: number;
-  assignee: string;
+  assignee?: string;
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, columns }) => {
@@ -51,7 +51,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
         description: data.description,
         state: data.state,
         priority: Number(data.priority),
-        assignee: data.assignee,
+        assignee: data.assignee || undefined,
       });
       
       onTaskCreated(newTask);
@@ -157,23 +157,23 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onTaskCreated, c
 
           <div className="mb-6">
             <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="assignee">
-              Исполнитель
+              Исполнитель <span className="text-gray-500 dark:text-gray-400 text-xs">(необязательно)</span>
             </label>
             <select
-              className={`shadow appearance-none border ${errors.assignee ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded w-full py-2 px-3 text-gray-700 dark:text-gray-100 dark:bg-gray-900 leading-tight focus:outline-none focus:shadow-outline`}
+              className={`shadow appearance-none border border-gray-300 dark:border-gray-600 rounded w-full py-2 px-3 text-gray-700 dark:text-gray-100 dark:bg-gray-900 leading-tight focus:outline-none focus:shadow-outline`}
               id="assignee"
-              {...register('assignee', { required: 'Исполнитель обязателен' })}
+              {...register('assignee')}
             >
-              <option value="">Выберите исполнителя</option>
+              <option value="">Без исполнителя (Бэклог)</option>
               {users.map(user => (
                 <option key={user.id} value={user.id}>
                   {user.username}
                 </option>
               ))}
             </select>
-            {errors.assignee && (
-              <p className="text-red-500 text-xs italic">{errors.assignee.message}</p>
-            )}
+            <p className="text-gray-500 dark:text-gray-400 text-xs italic mt-1">
+              Если исполнитель не выбран, задача автоматически попадет в Бэклог
+            </p>
           </div>
 
           <div className="flex items-center justify-end">

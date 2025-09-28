@@ -6,12 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartBoard - Управление задачами</title>
     <script>
-      // Apply saved or system theme before styles load
+      // Apply saved theme and accent color before styles load
       (function() {
         try {
-          var stored = localStorage.getItem('theme');
+          var storedTheme = localStorage.getItem('app-theme') || 'auto';
+          var storedAccentColor = localStorage.getItem('app-accent-color') || '#3B82F6';
+          
+          // Apply accent color
+          document.documentElement.style.setProperty('--accent-color', storedAccentColor);
+          
+          // Apply theme
           var system = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var useDark = stored ? stored === 'dark' : system;
+          var useDark = storedTheme === 'dark' || (storedTheme === 'auto' && system);
           if (useDark) {
             document.documentElement.classList.add('dark');
           } else {

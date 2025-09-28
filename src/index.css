@@ -3,11 +3,26 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --accent-color: #3B82F6;
+    --accent-color-50: #eff6ff;
+    --accent-color-100: #dbeafe;
+    --accent-color-500: #3b82f6;
+    --accent-color-600: #2563eb;
+    --accent-color-700: #1d4ed8;
+  }
   html { color-scheme: light; }
   body { @apply bg-gray-50 text-gray-900; }
   .dark html { color-scheme: dark; }
   .dark body { @apply bg-gray-900 text-gray-100; }
 }
+
+/* Utility classes for accent color */
+.text-accent { color: var(--accent-color); }
+.bg-accent { background-color: var(--accent-color); }
+.border-accent { border-color: var(--accent-color); }
+.hover\:bg-accent:hover { background-color: var(--accent-color-700); }
+.hover\:text-accent:hover { color: var(--accent-color); }
 
 /* Prevent scrollbars/overflow issues when globally scaled */
 .scale-container {

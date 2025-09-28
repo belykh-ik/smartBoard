@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
-import { fetchUsers } from '../api';
-import { User } from '../types';
+import { fetchUsers, updateUserRole, fetchBoardData, updateBoardColumns } from '../api';
+import { User, Board } from '../types';
 import { useNavigate } from 'react-router-dom';
+import BoardSettingsModal from '../components/BoardSettingsModal';
 
 const SettingsPage: React.FC = () => {
   const { auth } = useAuth();
@@ -12,7 +13,12 @@ const SettingsPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<Record<string, boolean>>({});
-  const [darkMode, setDarkMode] = useState(false);
+  const [, setDarkMode] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
+  const [accentColor, setAccentColor] = useState('#3B82F6');
+  const [showInterfaceSettings, setShowInterfaceSettings] = useState(false);
+  const [isBoardSettingsOpen, setIsBoardSettingsOpen] = useState(false);
+  const [boardData, setBoardData] = useState<Board | null>(null);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -39,13 +45,37 @@ const SettingsPage: React.FC = () => {
     loadUsers();
   }, [auth.isAdmin, auth.user?.id]);
 
-  // Initialize dark mode from storage/system
+  // Load board data for board settings
+  useEffect(() => {
+    const loadBoardData = async () => {
+      try {
+        const board = await fetchBoardData();
+        setBoardData(board);
+      } catch (error) {
+        console.error('Error loading board data:', error);
+      }
+    };
+
+    if (auth.isAdmin) {
+      loadBoardData();
+    }
+  }, [auth.isAdmin]);
+
+  // Initialize theme settings from storage
   useEffect(() => {
     try {
-      const storedTheme = localStorage.getItem('theme');
+      const storedTheme = localStorage.getItem('app-theme') || 'auto';
+      const storedAccentColor = localStorage.getItem('app-accent-color') || '#3B82F6';
+      setTheme(storedTheme as 'light' | 'dark' | 'auto');
+      setAccentColor(storedAccentColor);
+      
+      // Apply theme
       const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const isDark = storedTheme ? storedTheme === 'dark' : systemPrefersDark;
-      setDarkMode(isDark);
+      const shouldUseDark = storedTheme === 'dark' || (storedTheme === 'auto' && systemPrefersDark);
+      setDarkMode(shouldUseDark);
+      
+      // Apply accent color
+      document.documentElement.style.setProperty('--accent-color', storedAccentColor);
     } catch (_) {
       // ignore
     }
@@ -58,29 +88,76 @@ const SettingsPage: React.FC = () => {
     });
   };
 
-  const handleSaveChanges = () => {
-    // Here you would make API calls to update user roles
-    console.log('Saving role changes:', selectedUsers);
-    
-    // Update local state to reflect changes
-    setUsers(users.map(user => ({
-      ...user,
-      role: selectedUsers[user.id] ? 'admin' : 'user'
-    })));
-    
-    // Navigate back to dashboard
-    navigate('/dashboard');
+  const handleSaveChanges = async () => {
+    try {
+      // Make API calls to update user roles
+      const updatePromises = Object.entries(selectedUsers).map(async ([userId, isAdmin]) => {
+        const newRole = isAdmin ? 'admin' : 'user';
+        return updateUserRole(userId, newRole);
+      });
+      
+      await Promise.all(updatePromises);
+      
+      // Update local state to reflect changes
+      setUsers(users.map(user => ({
+        ...user,
+        role: selectedUsers[user.id] ? 'admin' : 'user'
+      })));
+      
+      // Navigate back to dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Ошибка при обновлении ролей пользователей:', error);
+      alert('Не удалось сохранить изменения ролей');
+    }
   };
 
-  const handleToggleDark = (enabled: boolean) => {
-    setDarkMode(enabled);
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
+    setTheme(newTheme);
+    localStorage.setItem('app-theme', newTheme);
+    
+    const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldUseDark = newTheme === 'dark' || (newTheme === 'auto' && systemPrefersDark);
+    setDarkMode(shouldUseDark);
+    
     const root = document.documentElement;
-    if (enabled) {
+    if (shouldUseDark) {
       root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
     } else {
       root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+    }
+  };
+
+  const handleAccentColorChange = (color: string) => {
+    setAccentColor(color);
+    localStorage.setItem('app-accent-color', color);
+    document.documentElement.style.setProperty('--accent-color', color);
+  };
+
+  const handleColumnsUpdate = async (updatedColumns: any[]) => {
+    if (!boardData) return;
+
+    try {
+      // Update backend
+      await updateBoardColumns(updatedColumns);
+
+      // Update local state
+      const newBoard = {
+        ...boardData,
+        columns: updatedColumns.reduce((acc, col) => ({
+          ...acc,
+          [col.id]: {
+            ...boardData.columns[col.id],
+            title: col.title
+          }
+        }), boardData.columns),
+        columnOrder: updatedColumns.map(col => col.id)
+      };
+
+      setBoardData(newBoard);
+    } catch (error) {
+      console.error('Ошибка обновления колонок:', error);
+      alert('Не удалось обновить колонки');
     }
   };
 
@@ -145,39 +222,126 @@ const SettingsPage: React.FC = () => {
           <div className="mb-6">
             <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Настройки интерфейса</h2>
             <div className="space-y-4">
-              <div className="flex items-center">
-                <input 
-                  id="darkMode" 
-                  type="checkbox" 
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-                  checked={darkMode}
-                  onChange={(e) => handleToggleDark(e.target.checked)}
-                />
-                <label htmlFor="darkMode" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                  Темная тема
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input 
-                  id="notifications" 
-                  type="checkbox" 
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-                  defaultChecked
-                />
-                <label htmlFor="notifications" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                  Включить уведомления
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input 
-                  id="compactView" 
-                  type="checkbox" 
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-                />
-                <label htmlFor="compactView" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                  Компактный вид задач
-                </label>
-              </div>
+              <button 
+                onClick={() => setShowInterfaceSettings(!showInterfaceSettings)}
+                className="flex items-center justify-between w-full p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                    <span className="text-blue-600 dark:text-blue-200">🎨</span>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium dark:text-gray-100">Тема и цвета</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Настройка внешнего вида приложения</div>
+                  </div>
+                </div>
+                <div className={`transform transition-transform ${showInterfaceSettings ? 'rotate-180' : ''}`}>
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+
+              {showInterfaceSettings && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-md font-medium mb-3 dark:text-gray-200">Тема оформления</h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          onClick={() => handleThemeChange('light')}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      theme === 'light' 
+                        ? 'border-accent bg-accent/10 dark:bg-accent/20' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                        >
+                          <div className="w-full h-8 bg-white rounded mb-2"></div>
+                          <div className="text-sm font-medium dark:text-gray-200">Светлая</div>
+                        </button>
+                        <button
+                          onClick={() => handleThemeChange('dark')}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            theme === 'dark' 
+                              ? 'border-accent bg-accent/10 dark:bg-accent/20' 
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                          }`}
+                        >
+                          <div className="w-full h-8 bg-gray-800 rounded mb-2"></div>
+                          <div className="text-sm font-medium dark:text-gray-200">Темная</div>
+                        </button>
+                        <button
+                          onClick={() => handleThemeChange('auto')}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            theme === 'auto' 
+                              ? 'border-accent bg-accent/10 dark:bg-accent/20' 
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                          }`}
+                        >
+                          <div className="w-full h-8 bg-gradient-to-r from-white to-gray-800 rounded mb-2"></div>
+                          <div className="text-sm font-medium dark:text-gray-200">Авто</div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-md font-medium mb-3 dark:text-gray-200">Акцентный цвет</h3>
+                      <div className="grid grid-cols-6 gap-3">
+                        {[
+                          '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
+                          '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16',
+                          '#F97316', '#6366F1', '#14B8A6', '#DC2626'
+                        ].map(color => (
+                          <button
+                            key={color}
+                            onClick={() => handleAccentColorChange(color)}
+                            className={`w-10 h-10 rounded-full border-2 transition-all ${
+                              accentColor === color 
+                                ? 'border-gray-900 dark:border-gray-100 scale-110' 
+                                : 'border-gray-300 dark:border-gray-600 hover:scale-105'
+                            }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                      <div className="mt-2 flex items-center space-x-2">
+                        <input
+                          type="color"
+                          value={accentColor}
+                          onChange={(e) => handleAccentColorChange(e.target.value)}
+                          className="w-8 h-8 rounded border border-gray-300 dark:border-gray-600"
+                        />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Выбрать свой цвет</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <input 
+                          id="notifications" 
+                          type="checkbox" 
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                          defaultChecked
+                        />
+                        <label htmlFor="notifications" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                          Включить уведомления
+                        </label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          id="compactView" 
+                          type="checkbox" 
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                        />
+                        <label htmlFor="compactView" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                          Компактный вид задач
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -191,7 +355,10 @@ const SettingsPage: React.FC = () => {
                 >
                   Управление пользователями
                 </button>
-                <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md ml-2">
+                <button 
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md ml-2"
+                  onClick={() => setIsBoardSettingsOpen(true)}
+                >
                   Настройки доски
                 </button>
               </div>
@@ -245,6 +412,20 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Board Settings Modal */}
+      {isBoardSettingsOpen && boardData && (
+        <BoardSettingsModal 
+          isOpen={isBoardSettingsOpen} 
+          onClose={() => setIsBoardSettingsOpen(false)}
+          columns={boardData.columnOrder.map((id: string) => ({ 
+            id, 
+            title: boardData.columns[id].title,
+            order: boardData.columnOrder.indexOf(id)
+          }))}
+          onColumnsUpdate={handleColumnsUpdate}
+        />
+      )}
     </div>
   );
 };

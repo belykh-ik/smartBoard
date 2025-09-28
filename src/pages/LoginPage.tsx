@@ -7,18 +7,18 @@ const LoginPage: React.FC = () => {
   const message = location.state?.message;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold text-xl">
+          <div className="mx-auto h-12 w-12 bg-accent rounded-md flex items-center justify-center text-white font-bold text-xl">
             SB
           </div>
-          <h1 className="mt-2 text-center text-3xl font-extrabold text-gray-900">SmartBoard</h1>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <h1 className="mt-2 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">SmartBoard</h1>
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Войдите в свой аккаунт
           </p>
           {message && (
-            <div className="mt-2 p-2 bg-green-100 text-green-700 rounded text-center">
+            <div className="mt-2 p-2 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-center">
               {message}
             </div>
           )}

@@ -63,15 +63,15 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <Sidebar />
       <div className="pt-16 pl-20 p-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Профиль пользователя</h1>
+          <h1 className="text-2xl font-bold mb-6 dark:text-gray-100">Профиль пользователя</h1>
           
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-blue-600 h-32 relative">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div className="bg-accent h-32 relative">
               <div className="absolute -bottom-16 left-8">
                 <div className="w-32 h-32 rounded-full bg-white p-1">
                   <div className="w-full h-full rounded-full bg-blue-100 flex items-center justify-center">
@@ -84,99 +84,99 @@ const ProfilePage: React.FC = () => {
             </div>
             
             <div className="pt-20 px-8 pb-8">
-              <h2 className="text-2xl font-bold">{auth.user.username}</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl font-bold dark:text-gray-100">{auth.user.username}</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {auth.user.role === 'admin' ? 'Администратор' : 'Пользователь'}
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Информация</h3>
+                  <h3 className="text-lg font-semibold border-b pb-2 dark:text-gray-100 dark:border-gray-600">Информация</h3>
                   
                   <div className="flex items-center">
                     <User className="text-gray-400 mr-3" size={20} />
                     <div>
-                      <p className="text-sm text-gray-500">Имя пользователя</p>
-                      <p className="font-medium">{auth.user.username}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Имя пользователя</p>
+                      <p className="font-medium dark:text-gray-100">{auth.user.username}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center">
                     <Mail className="text-gray-400 mr-3" size={20} />
                     <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{auth.user.email}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                      <p className="font-medium dark:text-gray-100">{auth.user.email}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center">
                     <Shield className="text-gray-400 mr-3" size={20} />
                     <div>
-                      <p className="text-sm text-gray-500">Роль</p>
-                      <p className="font-medium">{auth.user.role === 'admin' ? 'Администратор' : 'Пользователь'}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Роль</p>
+                      <p className="font-medium dark:text-gray-100">{auth.user.role === 'admin' ? 'Администратор' : 'Пользователь'}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center">
                     <Calendar className="text-gray-400 mr-3" size={20} />
                     <div>
-                      <p className="text-sm text-gray-500">Дата регистрации</p>
-                      <p className="font-medium">{formatDate(auth.user.createdAt)}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Дата регистрации</p>
+                      <p className="font-medium dark:text-gray-100">{formatDate(auth.user.createdAt)}</p>
                     </div>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Статистика</h3>
+                  <h3 className="text-lg font-semibold border-b pb-2 dark:text-gray-100 dark:border-gray-600">Статистика</h3>
                   
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
-                        <p className="text-gray-500 text-sm">Задач в работе</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Задач в работе</p>
                         <p className="text-2xl font-bold text-blue-600">{taskStats.inProgress}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-gray-500 text-sm">Завершено задач</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Завершено задач</p>
                         <p className="text-2xl font-bold text-green-600">{taskStats.completed}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-gray-500 text-sm">На подтверждении</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">На подтверждении</p>
                         <p className="text-2xl font-bold text-orange-600">{taskStats.pending}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-gray-500 text-sm">Всего задач</p>
-                        <p className="text-2xl font-bold text-gray-600">{taskStats.total}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Всего задач</p>
+                        <p className="text-2xl font-bold text-gray-600 dark:text-gray-300">{taskStats.total}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <h3 className="text-lg font-semibold border-b pb-2 mt-6">Активность</h3>
+                  <h3 className="text-lg font-semibold border-b pb-2 mt-6 dark:text-gray-100 dark:border-gray-600">Активность</h3>
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <Clock className="text-gray-400 mr-3" size={20} />
                       <div>
-                        <p className="text-sm text-gray-500">Последний вход</p>
-                        <p className="font-medium">Сегодня, 10:45</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Последний вход</p>
+                        <p className="font-medium dark:text-gray-100">Сегодня, 10:45</p>
                       </div>
                     </div>
                     <div className="flex items-center">
                       <Clock className="text-gray-400 mr-3" size={20} />
                       <div>
-                        <p className="text-sm text-gray-500">Последнее действие</p>
-                        <p className="font-medium">Обновление статуса задачи</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Последнее действие</p>
+                        <p className="font-medium dark:text-gray-100">Обновление статуса задачи</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="mt-8 pt-6 border-t">
-                <h3 className="text-lg font-semibold mb-4">Настройки профиля</h3>
+              <div className="mt-8 pt-6 border-t dark:border-gray-600">
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Настройки профиля</h3>
                 <div className="flex space-x-4">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={() => setIsEditOpen(true)}>
+                  <button className="px-4 py-2 bg-accent text-white rounded hover:bg-accent" onClick={() => setIsEditOpen(true)}>
                     Изменить профиль
                   </button>
-                  <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300" onClick={() => setIsPwdOpen(true)}>
+                  <button className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500" onClick={() => setIsPwdOpen(true)}>
                     Сменить пароль
                   </button>
                 </div>

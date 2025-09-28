@@ -34,6 +34,7 @@ func RegisterRoures(r *mux.Router, db *sql.DB, conf *models.Config, board *servi
 
 	// Board routes
 	api.HandleFunc("/board", middleware.AuthMiddleware(conf, handler.getBoardHandler)).Methods("GET")
+	api.HandleFunc("/board/columns", middleware.AuthMiddleware(conf, handler.updateBoardColumnsHandler)).Methods("PUT")
 
 	// Task routes
 	api.HandleFunc("/tasks", middleware.AuthMiddleware(conf, handler.createTaskHandler)).Methods("POST")
@@ -46,6 +47,7 @@ func RegisterRoures(r *mux.Router, db *sql.DB, conf *models.Config, board *servi
 	api.HandleFunc("/users", middleware.AuthMiddleware(conf, handler.getUsersHandler)).Methods("GET")
 	api.HandleFunc("/users", middleware.AuthMiddleware(conf, handler.createUserHandler)).Methods("POST")
 	api.HandleFunc("/users/{id}", middleware.AuthMiddleware(conf, handler.deleteUserHandler)).Methods("DELETE")
+	api.HandleFunc("/users/{id}/role", middleware.AuthMiddleware(conf, handler.updateUserRoleHandler)).Methods("PATCH")
 
 	// Notification routes
 	api.HandleFunc("/notifications", middleware.AuthMiddleware(conf, handler.getNotificationsHandler)).Methods("GET")
@@ -57,6 +59,7 @@ func (h *handlerDeps) getBoardHandler(w http.ResponseWriter, r *http.Request) {
 	board, err := h.board.GetBoard()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(*board)
@@ -246,6 +249,39 @@ func (h *handlerDeps) deleteUserHandler(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted"})
 }
 
+type updateUserRoleRequest struct {
+	Role string `json:"role"`
+}
+
+func (h *handlerDeps) updateUserRoleHandler(w http.ResponseWriter, r *http.Request) {
+	role := r.Context().Value("role").(string)
+	if role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+	vars := mux.Vars(r)
+	userID := vars["id"]
+	if userID == "" {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
+	var req updateUserRoleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Role == "" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	if req.Role != "admin" && req.Role != "user" {
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
+	if _, err := h.db.Exec("UPDATE users SET role = $1 WHERE id = $2", req.Role, userID); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "User role updated"})
+}
+
 // Notification handlers
 func (h *handlerDeps) getNotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userId").(string)
@@ -272,5 +308,32 @@ func (h *handlerDeps) markNotificationReadHandler(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Notification marked as read",
+	})
+}
+
+func (h *handlerDeps) updateBoardColumnsHandler(w http.ResponseWriter, r *http.Request) {
+	var requestData struct {
+		Columns []service.ColumnUpdate `json:"columns"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if len(requestData.Columns) == 0 {
+		http.Error(w, "Columns array cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	err := h.board.UpdateBoardColumns(requestData.Columns)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to update columns: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Board columns updated successfully",
 	})
 }

@@ -20,20 +20,33 @@ func NewTaskDeps(db *sql.DB) *TaskDeps {
 }
 
 func (t TaskDeps) CreateTask(userID string, task *models.Task) error {
+	// If no assignee is specified, set state to backlog
+	if task.Assignee == "" || task.Assignee == "null" {
+		task.State = "backlog"
+		task.Assignee = ""
+	}
+
 	// Insert task into database
 	now := time.Now()
+	var assignee interface{}
+	if task.Assignee != "" && task.Assignee != "null" {
+		assignee = task.Assignee
+	} else {
+		assignee = nil
+	}
+
 	err := t.db.QueryRow(`
 		INSERT INTO tasks (title, description, state, priority, assignee, created_by, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, created_at, updated_at
-	`, task.Title, task.Description, task.State, task.Priority, task.Assignee, userID, now, now).Scan(&task.ID, &task.CreatedAt, &task.UpdatedAt)
+	`, task.Title, task.Description, task.State, task.Priority, assignee, userID, now, now).Scan(&task.ID, &task.CreatedAt, &task.UpdatedAt)
 
 	if err != nil {
 		return err
 	}
 
 	// Get assignee username for response, but keep ID for notifications
-	if task.Assignee != "" {
+	if task.Assignee != "" && task.Assignee != "null" {
 		assigneeID := task.Assignee
 		var username string
 		if err = t.db.QueryRow("SELECT username FROM users WHERE id = $1", assigneeID).Scan(&username); err == nil {
