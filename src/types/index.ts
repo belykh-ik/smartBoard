@@ -21,6 +21,7 @@ export interface Task {
   priority: number;
   assignee?: string;
   comments?: Comment[];
+  attachments?: number | { id: string }[] | string[];
   createdAt: string;
   updatedAt: string;
 }
